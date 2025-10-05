@@ -19,7 +19,9 @@ locals {
   }
 }
 
+# -------------------------
 # DynamoDB (On-Demand)
+# -------------------------
 resource "aws_dynamodb_table" "items" {
   name         = "${local.project}-items"
   billing_mode = "PAY_PER_REQUEST"
@@ -33,7 +35,9 @@ resource "aws_dynamodb_table" "items" {
   tags = local.tags
 }
 
+# -------------------------
 # Lambda role + permissions
+# -------------------------
 data "aws_iam_policy_document" "lambda_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -81,14 +85,18 @@ resource "aws_iam_role_policy" "lambda_app" {
   policy = data.aws_iam_policy_document.lambda_app.json
 }
 
-# Pre-create the log group to control retention
+# -------------------------
+# CloudWatch Logs for Lambda
+# -------------------------
 resource "aws_cloudwatch_log_group" "lambda" {
   name              = "/aws/lambda/${local.project}-fn"
   retention_in_days = 7
   tags              = local.tags
 }
 
+# -------------------------
 # Package Lambda from /lambda
+# -------------------------
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambda"
@@ -114,7 +122,9 @@ resource "aws_lambda_function" "api" {
   tags = local.tags
 }
 
-# HTTP API (cheaper than REST)
+# -------------------------
+# API Gateway HTTP API
+# -------------------------
 resource "aws_apigatewayv2_api" "http" {
   name          = "${local.project}-http"
   protocol_type = "HTTP"
@@ -136,7 +146,9 @@ resource "aws_apigatewayv2_route" "public" {
   authorization_type = "NONE"
 }
 
-# Cognito User Pool + Client + Domain (Hosted UI)
+# -------------------------
+# Cognito: User Pool + Client + Domain
+# -------------------------
 resource "aws_cognito_user_pool" "pool" {
   name                     = "${local.project}-users"
   alias_attributes         = ["email"]
@@ -145,16 +157,18 @@ resource "aws_cognito_user_pool" "pool" {
 }
 
 resource "aws_cognito_user_pool_client" "client" {
-  name                           = "${local.project}-web"
-  user_pool_id                   = aws_cognito_user_pool.pool.id
-  generate_secret                = false
-  prevent_user_existence_errors  = "ENABLED"
+  name                          = "${local.project}-web"
+  user_pool_id                  = aws_cognito_user_pool.pool.id
+  generate_secret               = false
+  prevent_user_existence_errors = "ENABLED"
 
+  # Hosted UI via implicit flow (GUI-only token capture)
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows  = ["implicit"]
   allowed_oauth_scopes = ["openid", "email", "profile"]
   supported_identity_providers = ["COGNITO"]
 
+  # Postman OAuth callback (no code needed)
   callback_urls = ["https://oauth.pstmn.io/v1/callback"]
   logout_urls   = ["https://oauth.pstmn.io/v1/callback"]
 }
@@ -208,7 +222,9 @@ resource "aws_lambda_permission" "apigw_invoke" {
   source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
 }
 
-# EventBridge: log events emitted by Lambda (Source=serverless.api)
+# -------------------------
+# EventBridge: log events
+# -------------------------
 resource "aws_cloudwatch_log_group" "eventbridge" {
   name              = "/aws/events/${local.project}"
   retention_in_days = 7
