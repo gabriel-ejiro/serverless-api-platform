@@ -1,5 +1,13 @@
 terraform {
   required_version = ">= 1.6.0"
+  backend "s3" {
+    bucket = "tf-state-0000000000000-eu-north-1" 
+    key    = "tfstate/serverless-api-platform.tfstate"
+    region = "eu-north-1"
+    encrypt = true
+  }
+
+
   required_providers {
     aws     = { source = "hashicorp/aws",     version = "~> 5.60" }
     archive = { source = "hashicorp/archive", version = "~> 2.4" }
