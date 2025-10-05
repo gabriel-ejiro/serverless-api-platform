@@ -1,4 +1,3 @@
-
 name: Terraform Deploy
 
 on:
@@ -10,9 +9,17 @@ permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: tf-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      TF_INPUT: "false"
+      TF_IN_AUTOMATION: "true"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -27,21 +34,16 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Init
-        run: terraform -chdir=infra init
+        run: terraform -chdir=infra init -upgrade
 
-      # NEW: import pre-existing resources so Terraform tracks them
-            - name: Init
-        run: terraform -chdir=infra init
-
-      # Import resources that already exist so Terraform manages them
+      # Import resources that might already exist so Terraform manages them
       - name: Import pre-existing resources (idempotent)
         run: |
-          terraform -chdir=infra import aws_dynamodb_table.items serverless-api-platform-items || echo "table not found"
-          terraform -chdir=infra import aws_lambda_function.api serverless-api-platform-fn || echo "lambda not found"
-          terraform -chdir=infra import aws_cloudwatch_log_group.lambda /aws/lambda/serverless-api-platform-fn || echo "lambda log group not found"
-          terraform -chdir=infra import aws_cloudwatch_log_group.eventbridge /aws/events/serverless-api-platform || echo "events log group not found"
-          # If you previously imported/managed EventBridge IAM role, remove its import lines and the resources you deleted above.
-
+          terraform -chdir=infra import aws_dynamodb_table.items serverless-api-platform-items || echo "skip: table already managed or not found"
+          terraform -chdir=infra import aws_lambda_function.api serverless-api-platform-fn || echo "skip: lambda already managed or not found"
+          terraform -chdir=infra import aws_cloudwatch_log_group.lambda /aws/lambda/serverless-api-platform-fn || echo "skip: lambda log group already managed or not found"
+          terraform -chdir=infra import aws_cloudwatch_log_group.eventbridge /aws/events/serverless-api-platform || echo "skip: events log group already managed or not found"
 
       - name: Apply (auto-approve)
         run: terraform -chdir=infra apply -auto-approve
+
