@@ -1,3 +1,4 @@
+
 name: Terraform Deploy
 
 on:
@@ -27,6 +28,15 @@ jobs:
 
       - name: Init
         run: terraform -chdir=infra init
+
+      # NEW: import pre-existing resources so Terraform tracks them
+      - name: Import pre-existing resources (idempotent)
+        run: |
+          terraform -chdir=infra import aws_dynamodb_table.items serverless-api-platform-items || echo "table not found"
+          terraform -chdir=infra import aws_iam_role.lambda_exec serverless-api-platform-lambda-role || echo "role not found"
+          terraform -chdir=infra import aws_iam_role.events_to_logs serverless-api-platform-events-logs-role || echo "role not found"
+          terraform -chdir=infra import aws_cloudwatch_log_group.lambda /aws/lambda/serverless-api-platform-fn || echo "log group not found"
+          terraform -chdir=infra import aws_cloudwatch_log_group.eventbridge /aws/events/serverless-api-platform || echo "log group not found"
 
       - name: Apply (auto-approve)
         run: terraform -chdir=infra apply -auto-approve
