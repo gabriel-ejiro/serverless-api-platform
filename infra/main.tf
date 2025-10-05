@@ -1,12 +1,11 @@
 terraform {
   required_version = ">= 1.6.0"
   backend "s3" {
-    bucket = "tf-state-0000000000000-eu-north-1" 
-    key    = "tfstate/serverless-api-platform.tfstate"
-    region = "eu-north-1"
+    bucket  = "tf-state-0000000000000-eu-north-1" # <- ensure this is your real bucket
+    key     = "tfstate/serverless-api-platform.tfstate"
+    region  = "eu-north-1"
     encrypt = true
   }
-
 
   required_providers {
     aws     = { source = "hashicorp/aws",     version = "~> 5.60" }
@@ -231,45 +230,12 @@ resource "aws_lambda_permission" "apigw_invoke" {
 }
 
 # -------------------------
-# EventBridge: log events
+# EventBridge: log events (no role_arn)
 # -------------------------
 resource "aws_cloudwatch_log_group" "eventbridge" {
   name              = "/aws/events/${local.project}"
   retention_in_days = 7
   tags              = local.tags
-}
-
-data "aws_iam_policy_document" "events_assume" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "events_to_logs" {
-  name               = "${local.project}-events-logs-role"
-  assume_role_policy = data.aws_iam_policy_document.events_assume.json
-  tags               = local.tags
-}
-
-data "aws_iam_policy_document" "events_logs" {
-  statement {
-    actions = [
-      "logs:CreateLogStream",
-      "logs:PutLogEvents",
-      "logs:DescribeLogStreams"
-    ]
-    resources = [aws_cloudwatch_log_group.eventbridge.arn]
-  }
-}
-
-resource "aws_iam_role_policy" "events_logs" {
-  role   = aws_iam_role.events_to_logs.id
-  policy = data.aws_iam_policy_document.events_logs.json
 }
 
 resource "aws_cloudwatch_event_rule" "api_events" {
@@ -278,7 +244,7 @@ resource "aws_cloudwatch_event_rule" "api_events" {
 }
 
 resource "aws_cloudwatch_event_target" "to_logs" {
-  rule     = aws_cloudwatch_event_rule.api_events.name
-  arn      = aws_cloudwatch_log_group.eventbridge.arn
-  role_arn = aws_iam_role.events_to_logs.arn
+  rule = aws_cloudwatch_event_rule.api_events.name
+  arn  = aws_cloudwatch_log_group.eventbridge.arn
+  # Do NOT set role_arn when target is a CloudWatch Logs log group.
 }
