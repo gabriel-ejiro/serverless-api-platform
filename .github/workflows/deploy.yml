@@ -46,4 +46,9 @@ jobs:
 
       - name: Apply (auto-approve)
         run: terraform -chdir=infra apply -auto-approve
+      - name: Show outputs
+        run: terraform -chdir=infra output -json
+
+
+        
 
