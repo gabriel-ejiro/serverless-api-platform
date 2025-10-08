@@ -7,16 +7,45 @@ permissions:
   id-token: write
   contents: read
 
+# Prevent a destroy colliding with a running deploy on the same ref
+concurrency:
+  group: tf-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   destroy:
     runs-on: ubuntu-latest
+    env:
+      TF_INPUT: "false"
+      TF_IN_AUTOMATION: "true"
+    defaults:
+      run:
+        working-directory: infra
+
     steps:
       - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
           role-session-name: gha-terraform-destroy
-      - uses: hashicorp/setup-terraform@v3
-      - name: Destroy
-        run: terraform -chdir=infra destroy -auto-approve
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # Reinitialize the backend on this clean runner
+      - name: Terraform Init
+        run: terraform init -reconfigure
+
+      # If you use workspaces, set one (optional)
+      # - name: Select workspace
+      #   run: terraform workspace select ${{ vars.TF_WORKSPACE || 'default' }}
+
+      # Optional sanity check (won’t fail the job)
+      - name: Terraform State List
+        run: terraform state list || true
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -input=false
