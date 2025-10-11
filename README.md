@@ -8,10 +8,10 @@ Multi‑stage HTTP API with **API Gateway + Lambda (Python) + DynamoDB + EventBr
 
 
 <p align="center">
-<a href="https://github.com/<your-user>/<your-repo>/actions">
-<img alt="CI" src="https://img.shields.io/github/actions/workflow/status/<your-user>/<your-repo>/terraform-deploy.yml?label=deploy" />
+<a href="https://github.com/<gabriel-ejiro>/serverless-api-platform/actions">
+<img alt="CI" src="https://img.shields.io/github/actions/workflow/status/gabriel-ejiro/serverless-api-platform/terraform-deploy.yml?label=deploy" />
 </a>
-<a href="https://github.com/<your-user>/<your-repo>">
+<a href="https://github.com/gabriel-ejiro/serverless-api-platform">
 <img alt="License" src="https://img.shields.io/badge/IaC-Terraform-7B42BC" />
 </a>
 <img alt="Auth" src="https://img.shields.io/badge/Auth-Cognito-FF9900" />
