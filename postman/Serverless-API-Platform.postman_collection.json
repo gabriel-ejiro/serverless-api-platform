@@ -1,0 +1,62 @@
+{
+"info": {
+"name": "Serverless API Platform",
+"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+"description": "Public health check and protected item routes for the Serverless API Platform. Set the API and TOKEN variables before sending."
+},
+"item": [
+{
+"name": "Health: /public",
+"request": {
+"method": "GET",
+"header": [],
+"url": {
+"raw": "{{API}}/public",
+"host": ["{{API}}"],
+"path": ["public"]
+}
+}
+},
+{
+"name": "Create item: POST /items",
+"request": {
+"method": "POST",
+"header": [
+{ "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+{ "key": "Content-Type", "value": "application/json" }
+],
+"body": {
+"mode": "raw",
+"raw": "{\n \"value\": \"hello-from-postman\"\n}"
+},
+"url": {
+"raw": "{{API}}/items",
+"host": ["{{API}}"],
+"path": ["items"]
+}
+}
+},
+{
+"name": "Get item: GET /items?id=...",
+"request": {
+"method": "GET",
+"header": [
+{ "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+],
+"url": {
+"raw": "{{API}}/items?id={{ITEM_ID}}",
+"host": ["{{API}}"],
+"path": ["items"],
+"query": [
+{ "key": "id", "value": "{{ITEM_ID}}" }
+]
+}
+}
+}
+],
+"variable": [
+{ "key": "API", "value": "https://pccdlioc0b.execute-api.eu-north-1.amazonaws.com" },
+{ "key": "TOKEN", "value": "eyJraWQiOiJPU1IyTWk2WGxvaUZwaURcL3lrcXFrVzRUdjNicGYydVhOdVBsVHpMZU5IQT0iLCJhbGciOiJSUzI1NiJ9.eyJhdF9oYXNoIjoiZTZuR3g3dVd0RWhLeG1TcllIMURfdyIsInN1YiI6IjEwOWM1OWFjLWQwNzEtNzBmOC1mZGZjLTdmNzA1ODBiODdiMyIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuZXUtbm9ydGgtMS5hbWF6b25hd3MuY29tXC9ldS1ub3J0aC0xXzVxMm9FVEhsSiIsImNvZ25pdG86dXNlcm5hbWUiOiJnYWJieSIsImF1ZCI6Ijdjb2hmZ3FyMW0yZTJkY3RwaWFqbHRrbmk2IiwiZXZlbnRfaWQiOiIyY2EzM2Q4My00NzQ1LTQzM2ItYjVhOS0yMWVlNjBlM2NmMTAiLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTc2MDIxOTQyMCwiZXhwIjoxNzYwMjIzMDIwLCJpYXQiOjE3NjAyMTk0MjAsImp0aSI6ImZjMDcxZjY3LWMwN2QtNDQyYi04MmE0LWZhZGFjZjE5YmEzMiIsImVtYWlsIjoiZWppcm9nYWJyaWVsbDIwMTlAZ21haWwuY29tIn0.jxcozWBTvENLEaJlnvd_BC0B0sGPyon4NkIT1jfR01yaflJq30ROeX2h71tDFXdxFz0cyCcssdrEEV5FC1JopaEr4yhQmG5rmtJu3SaJriVXyzO3Nr50d_yKSbqmRYToDi3uDrrCh-AfgCdHgEBnVy-otGc998iJfO94Mv6uDPjM5VWycexGJpVfwxBJjg0ZdkWWYIl_FYxCIjAijssbs0pGbYetI0HqabpHRYZ6yekQNGOWtSsgQQ-JI1nDgmkHfkKSMUAjqBxXWgJdPY_US0h1C6-c6a2-1quZzpMjx1ik47P8GCpDGCvkd7JM0miaFroU5hHeZyqttxgV4zufSQ" },
+{ "key": "ITEM_ID", "value": "" }
+]
+}
