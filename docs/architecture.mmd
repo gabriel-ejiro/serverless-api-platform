@@ -1,31 +1,87 @@
-```mermaid
 flowchart LR
+
+%% =========================
+%% Clients
+%% =========================
 subgraph Client
-Browser[Browser / Hoppscotch]
-HostedUI[Cognito Hosted UI]
+  Browser[Browser / Hoppscotch]
 end
 
+%% =========================
+%% Authentication (Cognito)
+%% =========================
+subgraph Auth[Cognito]
+  HostedUI[Cognito Hosted UI (Domain)]
+  UserPool[(User Pool)]
+  HostedUI -->|Issues ID/Access JWT| Browser
+  UserPool --- HostedUI
+end
 
-Browser -->|GET /public| APIGW(API Gateway HTTP API)
-HostedUI -->|Issues JWT (ID/Access)| Browser
+%% =========================
+%% API & Compute
+%% =========================
+subgraph API[API Layer]
+  APIGW[API Gateway (HTTP API)]
+  Authorizer[Cognito User Pool Authorizer]
+  APIGW --> Authorizer
+  Authorizer --> APIGW
+end
 
+subgraph Compute[Compute]
+  Lambda[Lambda (Python)]
+end
 
-Browser -->|POST /items + Bearer JWT| APIGW
-APIGW --> Authorizer[JWT / Cognito User Pool Authorizer]
-Authorizer --> APIGW
-APIGW --> Lambda[Lambda (Python)]
-Lambda --> Dynamo[DynamoDB Table]
-Lambda -->|PutEvents| Bus(EventBridge Bus)
-Bus --> Target1[CloudWatch Logs Target]
-Bus -. optional .-> ConsumerB[Future Consumer]
+%% =========================
+%% Data & Events
+%% =========================
+subgraph DataEvents[Data & Events]
+  Dynamo[(DynamoDB Table)]
+  Bus[(EventBridge Bus)]
+  TargetLogs[CloudWatch Logs Target]
+  Bus --> TargetLogs
+  Bus -. optional .-> ConsumerB[Future Consumer(s)]
+end
 
+%% =========================
+%% Observability
+%% =========================
+subgraph Observability
+  APILog[API Gateway Logs]
+  LambdaLog[Lambda Logs]
+end
 
-subgraph CI/CD
-GH[GitHub Actions (OIDC)] --> IAM[AssumeRole]
-IAM --> TF[Terraform Apply]
+%% =========================
+%% CI/CD
+%% =========================
+subgraph CICD[CI/CD]
+  GH[GitHub Actions (OIDC)]
+  IAMRole[(IAM Deploy Role)]
+  TF[Terraform Plan/Apply]
+  GH -->|AssumeRoleWithWebIdentity| IAMRole
+  IAMRole --> TF
+end
+
+%% =========================
+%% Request Flow
+%% =========================
+Browser -->|GET /public| APIGW
+Browser -->|POST /items<br/>Authorization: Bearer ID token| APIGW
+
+APIGW -->|Lambda proxy| Lambda
+Lambda --> Dynamo
+Lambda -->|PutEvents| Bus
+
+%% Logs
+APIGW --> APILog
+Lambda --> LambdaLog
+
+%% Provisioning (Terraform wires everything)
 TF --> APIGW
 TF --> Lambda
 TF --> Dynamo
 TF --> Bus
-TF --> Cognito[Cognito User Pool]
-end
+TF --> UserPool
+TF --> HostedUI
+TF --> APILog
+TF --> LambdaLog
+TF --> IAMRole
