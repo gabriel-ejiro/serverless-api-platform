@@ -1,0 +1,31 @@
+```mermaid
+flowchart LR
+subgraph Client
+Browser[Browser / Hoppscotch]
+HostedUI[Cognito Hosted UI]
+end
+
+
+Browser -->|GET /public| APIGW(API Gateway HTTP API)
+HostedUI -->|Issues JWT (ID/Access)| Browser
+
+
+Browser -->|POST /items + Bearer JWT| APIGW
+APIGW --> Authorizer[JWT / Cognito User Pool Authorizer]
+Authorizer --> APIGW
+APIGW --> Lambda[Lambda (Python)]
+Lambda --> Dynamo[DynamoDB Table]
+Lambda -->|PutEvents| Bus(EventBridge Bus)
+Bus --> Target1[CloudWatch Logs Target]
+Bus -. optional .-> ConsumerB[Future Consumer]
+
+
+subgraph CI/CD
+GH[GitHub Actions (OIDC)] --> IAM[AssumeRole]
+IAM --> TF[Terraform Apply]
+TF --> APIGW
+TF --> Lambda
+TF --> Dynamo
+TF --> Bus
+TF --> Cognito[Cognito User Pool]
+end
