@@ -1,69 +1,47 @@
-```mermaid
 flowchart LR
-
-%% === Clients ===
 subgraph Client
   Browser["Browser / Hoppscotch"]
 end
-
-%% === Authentication (Cognito) ===
 subgraph Cognito
   HostedUI["Cognito Hosted UI (Domain)"]
   UserPool["User Pool"]
   HostedUI -->|issues ID/Access JWT| Browser
   UserPool --- HostedUI
 end
-
-%% === API Layer ===
 subgraph API
   APIGW["API Gateway (HTTP API)"]
   Authorizer["Cognito User Pool Authorizer"]
   APIGW --> Authorizer
   Authorizer --> APIGW
 end
-
-%% === Compute ===
 subgraph Compute
   Lambda["Lambda (Python)"]
 end
-
-%% === Data & Events ===
-subgraph Data_and_Events["Data & Events"]
+subgraph "Data & Events"
   Dynamo["DynamoDB Table"]
   Bus["EventBridge Bus"]
   TargetLogs["CloudWatch Logs Target"]
   Bus --> TargetLogs
   Bus -.-> ConsumerB["Future Consumer(s)"]
 end
-
-%% === Observability ===
 subgraph Observability
   APILog["API Gateway Logs"]
   LambdaLog["Lambda Logs"]
 end
-
-%% === CI/CD ===
-subgraph CICD["CI/CD"]
+subgraph "CI/CD"
   GH["GitHub Actions (OIDC)"]
   IAMRole["IAM Deploy Role"]
   TF["Terraform Plan/Apply"]
-  GH -->|AssumeRoleWithWebIdentity| IAMRole
+  GH --> IAMRole
   IAMRole --> TF
 end
-
-%% === Request Flow ===
-Browser -->|GET /public| APIGW
-Browser -->|POST /items (Authorization: Bearer ID token)| APIGW
-
-APIGW -->|Lambda proxy| Lambda
+Browser -->|"GET /public"| APIGW
+Browser -->|"POST /items (Authorization: Bearer ID token)"| APIGW
+APIGW -->|"Lambda proxy"| Lambda
 Lambda --> Dynamo
-Lambda -->|PutEvents| Bus
-
-%% === Logs ===
+Lambda -->|"PutEvents"| Bus
 APIGW --> APILog
 Lambda --> LambdaLog
-
-%% === Provisioning via Terraform ===
 TF --> APIGW
 TF --> Lambda
 TF --> Dynamo
@@ -73,10 +51,4 @@ TF --> HostedUI
 TF --> APILog
 TF --> LambdaLog
 TF --> IAMRole
-```
 
-If you still see errors:
-
-* Make sure your editor didn’t collapse line breaks (each node/edge is on its own line).
-* Avoid smart quotes; use plain `"`.
-* Keep labels simple (no HTML or markdown inside labels).
