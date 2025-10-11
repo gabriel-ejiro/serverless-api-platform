@@ -4,7 +4,7 @@
 Multi‑stage HTTP API with **API Gateway + Lambda (Python) + DynamoDB + EventBridge**, secured by **Cognito**, fully automated with **Terraform + GitHub Actions (OIDC, no long‑lived keys)**.
 
 
-![Architecture](./docs/architecture.png)
+![Architecture](./docs/architecture.mmd)
 
 
 <p align="center">
