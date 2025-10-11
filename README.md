@@ -1,0 +1,1 @@
+Serverless API Platform — Multi-stage HTTP API on AWS (API Gateway + Lambda + DynamoDB + EventBridge) with Cognito auth, Terraform IaC, and GitHub Actions (OIDC, no long-lived keys). One-click deploy, 60-second test.
