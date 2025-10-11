@@ -27,7 +27,7 @@ Multi‑stage HTTP API with **API Gateway + Lambda (Python) + DynamoDB + EventBr
 
 
 ## 🗺️ Architecture
-See [`docs/architecture.mmd`](./docs/architecture.mmd) (Mermaid). A rendered PNG is recommended as `docs/architecture.png`.
+See [`docs/architecture.mmd`](./docs/architecture.mmd) (rendered with Mermaid)
 
 
 **Flow:** Client → API Gateway HTTP API → Lambda (Python) → DynamoDB. POST `/items` emits `serverless.api` events to EventBridge (logged).
