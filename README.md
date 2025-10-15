@@ -33,13 +33,3 @@ See [`docs/architecture.mmd`](./docs/architecture.mmd) (rendered with Mermaid)
 **Flow:** Client → API Gateway HTTP API → Lambda (Python) → DynamoDB. POST `/items` emits `serverless.api` events to EventBridge (logged).
 
 
-## 🚀 Deploy (10 minutes)
-```bash
-# Configure repo vars (Settings → Secrets and variables → Actions → Variables):
-# AWS_ROLE_ARN, AWS_REGION (e.g., eu-north-1)
-# Push to main to trigger GitHub Actions (terraform apply)
-
-
-# (Optional) local apply
-terraform -chdir=infra init -reconfigure
-terraform -chdir=infra apply -auto-approve
