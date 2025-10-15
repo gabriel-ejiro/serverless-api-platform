@@ -1,7 +1,7 @@
 terraform {
   required_version = ">= 1.6.0"
   backend "s3" {
-    bucket  = "tf-state-0000000000000-eu-north-1" # <- ensure this is your real bucket
+    bucket  = "tf-state-0000000000000-eu-north-1" 
     key     = "tfstate/serverless-api-platform.tfstate"
     region  = "eu-north-1"
     encrypt = true
@@ -26,9 +26,8 @@ locals {
   }
 }
 
-# -------------------------
+
 # DynamoDB (On-Demand)
-# -------------------------
 resource "aws_dynamodb_table" "items" {
   name         = "${local.project}-items"
   billing_mode = "PAY_PER_REQUEST"
@@ -42,9 +41,8 @@ resource "aws_dynamodb_table" "items" {
   tags = local.tags
 }
 
-# -------------------------
+
 # Lambda role + permissions
-# -------------------------
 data "aws_iam_policy_document" "lambda_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -92,18 +90,18 @@ resource "aws_iam_role_policy" "lambda_app" {
   policy = data.aws_iam_policy_document.lambda_app.json
 }
 
-# -------------------------
+
 # CloudWatch Logs for Lambda
-# -------------------------
+
 resource "aws_cloudwatch_log_group" "lambda" {
   name              = "/aws/lambda/${local.project}-fn"
   retention_in_days = 7
   tags              = local.tags
 }
 
-# -------------------------
+
 # Package Lambda from /lambda
-# -------------------------
+
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambda"
@@ -129,9 +127,9 @@ resource "aws_lambda_function" "api" {
   tags = local.tags
 }
 
-# -------------------------
+
 # API Gateway HTTP API
-# -------------------------
+
 resource "aws_apigatewayv2_api" "http" {
   name          = "${local.project}-http"
   protocol_type = "HTTP"
@@ -145,7 +143,7 @@ resource "aws_apigatewayv2_integration" "lambda" {
   payload_format_version = "2.0"
 }
 
-# Public route for quick sanity check (no auth)
+
 resource "aws_apigatewayv2_route" "public" {
   api_id             = aws_apigatewayv2_api.http.id
   route_key          = "GET /public"
@@ -153,9 +151,9 @@ resource "aws_apigatewayv2_route" "public" {
   authorization_type = "NONE"
 }
 
-# -------------------------
+
 # Cognito: User Pool + Client + Domain
-# -------------------------
+
 resource "aws_cognito_user_pool" "pool" {
   name                     = "${local.project}-users"
   alias_attributes         = ["email"]
@@ -229,9 +227,9 @@ resource "aws_lambda_permission" "apigw_invoke" {
   source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
 }
 
-# -------------------------
+
 # EventBridge: log events (no role_arn)
-# -------------------------
+
 resource "aws_cloudwatch_log_group" "eventbridge" {
   name              = "/aws/events/${local.project}"
   retention_in_days = 7
